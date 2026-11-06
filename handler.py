@@ -48,10 +48,16 @@ def generate(ref_path, prompt_text, text, num_steps=10, max_out_s=MAX_OUT_S):
         return {"error": "Empty text"}
     if len(text) > MAX_CHARS:
         return {"error": f"Text too long for dots.tts ({len(text)} characters, max {MAX_CHARS})"}
+    ref_s = librosa.get_duration(path=ref_path)
+    # rough length from the reference's speaking rate (UTF-8 bytes per second, as AuK does): the patch budget
+    # would cut longer speech off mid-sentence, so refuse it up front
+    est = ref_s * len(text.encode()) / max(1, len(prompt_text.encode()))
+    if est > max_out_s * 1.2:
+        return {"error": f"Text too long for this voice with dots.tts (about {est:.0f} s of speech, max {max_out_s:.0f} s). Shorten it or split it."}
     seed = int(np.random.randint(0, 2**31))
     torch.manual_seed(seed); torch.cuda.manual_seed(seed)
     # the patch budget covers prompt + output: allow the reference plus at most max_out_s of new speech
-    rt.max_generate_length = int(math.ceil(librosa.get_duration(path=ref_path) / PATCH_S)) + int(max_out_s / PATCH_S)
+    rt.max_generate_length = int(math.ceil(ref_s / PATCH_S)) + int(max_out_s / PATCH_S)
     r = rt.generate(text=text, prompt_audio_path=ref_path, prompt_text=prompt_text, num_steps=num_steps, guidance_scale=1.2)
     a = r["audio"].float().cpu().squeeze().numpy()
     a = librosa.resample(a, orig_sr=r["sample_rate"], target_sr=OUT_SR, res_type="soxr_hq")

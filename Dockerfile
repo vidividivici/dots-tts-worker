@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 HF_HOME=/models/hf HF_HUB_
 
 RUN apt-get update && apt-get install -y --no-install-recommends git libsndfile1 && rm -rf /var/lib/apt/lists/*
 # dots.tts runtime dependencies (versions from its constraints/recommended.txt); gradio is only used by its demo apps, so it is left out
-RUN pip install --no-cache-dir transformers==4.57.0 librosa==0.11.0 soundfile==0.13.1 numpy==2.2.6 pydantic==2.12.5 PyYAML==6.0.3 \
+RUN pip install --no-cache-dir transformers==4.57.1 librosa==0.11.0 soundfile==0.13.1 numpy==2.2.6 pydantic==2.12.5 PyYAML==6.0.3 \
     safetensors==0.8.0rc0 loguru "langcodes[data]" einops torchdiffeq tqdm lingua-language-detector WeTextProcessing \
     runpod huggingface_hub hf_transfer
 RUN pip install --no-cache-dir --no-deps "git+https://github.com/studio-dots-ai/dots.tts@4cf7d6b13f42066f97784e7d7cf2a9ed5f956997" \

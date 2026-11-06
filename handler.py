@@ -17,8 +17,11 @@ MAX_OUT_S = 45.0        # longest clip per request (the UI caps the text at 600 
 MAX_CHARS = 600
 PATCH_S = 0.16          # one dots.tts latent patch = 160 ms (prompt + output share the patch budget)
 
-rt = DotsTtsRuntime.from_pretrained(MODEL_DIR, precision="bfloat16", optimize=False, max_generate_length=500)
-print(f"model ready in {time.time() - T0:.1f}s", flush=True)
+# DOTS_OPTIMIZE=1: torch.compile + CUDA graphs. ~6-8x faster generation, but every cold start spends ~5 min compiling
+# (measured on an RTX A5000), which costs more than it saves unless a session generates more than ~12 clips.
+OPTIMIZE = os.environ.get("DOTS_OPTIMIZE", "0") == "1"
+rt = DotsTtsRuntime.from_pretrained(MODEL_DIR, precision="bfloat16", optimize=OPTIMIZE, max_generate_length=500)
+print(f"model ready in {time.time() - T0:.1f}s (optimize={OPTIMIZE})", flush=True)
 
 
 def fetch(url):
